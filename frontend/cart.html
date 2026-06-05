@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Checkout – DineFlow</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/navbar.css">
+  <link rel="stylesheet" href="css/cart.css">
+  <link rel="stylesheet" href="css/menu.css">
+<style>:root { --promo-h: 0px; }</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo" onclick="window.location.href='index.html'">DineFlow</div>
+  <div class="nav-links">
+    <a href="index.html">🏠 Home</a>
+    <a href="menu.html">🍽️ Menu</a>
+    <a href="tracking.html">📍 Track Order</a>
+    <a href="reviews.html">⭐ Reviews</a>
+  </div>
+  <div class="nav-right">
+    <button class="auth-btn" id="authNavBtn" onclick="window.location.href='index.html'">Sign In</button>
+    <button class="cart-btn" onclick="window.location.href='menu.html'">🛒 Back to Menu</button>
+  </div>
+</nav>
+
+<div style="padding-top: var(--nav-h);" class="page-anim">
+
+  <div style="background:linear-gradient(135deg,var(--pink),var(--orange));padding:40px 32px;text-align:center;">
+    <h1 style="font-family:'Pacifico',cursive;font-size:2rem;color:#fff;">🛒 Checkout</h1>
+    <p style="color:rgba(255,255,255,.85);font-weight:700;margin-top:6px;">Almost there! Fill in your details.</p>
+  </div>
+
+  <div class="checkout-wrap">
+    <div>
+      <div class="checkout-card">
+        <h2><span>📦</span> Delivery Details</h2>
+        <div class="form-row">
+          <div class="form-group"><label>Full Name</label><input type="text" id="co-name" placeholder="Your name"/></div>
+          <div class="form-group"><label>Phone Number</label><input type="text" id="co-phone" placeholder="+880 1XXX XXXXXX"/></div>
+        </div>
+        <div class="form-group"><label>Area / Locality</label><input type="text" id="co-area" placeholder="e.g. Dhanmondi, Mymensingh"/></div>
+        <div class="form-group"><label>Full Delivery Address</label><textarea id="co-address" rows="3" placeholder="House no, road, landmark…"></textarea></div>
+      </div>
+
+      <div class="checkout-card">
+        <h2><span>💳</span> Payment Method</h2>
+        <div class="cod-badge">💵 Cash on Delivery (COD)</div>
+        <p style="color:var(--muted);font-size:.88rem;margin-top:10px;font-weight:600;">Pay in cash when your order arrives. No card needed!</p>
+      </div>
+    </div>
+
+    <div>
+      <div class="checkout-card">
+        <h2><span>🧾</span> Order Summary</h2>
+        <div id="orderSummary"><p style="color:var(--muted);font-weight:600;text-align:center;padding:20px 0;">Loading cart…</p></div>
+        <div style="font-size:.88rem;color:var(--muted);font-weight:600;margin-top:12px;">
+          <div style="display:flex;justify-content:space-between;padding:6px 0;"><span>Subtotal</span><span id="summarySubtotal">৳0</span></div>
+          <div style="display:flex;justify-content:space-between;padding:6px 0;"><span>VAT (5%)</span><span id="summaryVat">৳0</span></div>
+          <div style="display:flex;justify-content:space-between;padding:6px 0;"><span>Delivery Fee</span><span style="color:var(--green);font-weight:800;">FREE</span></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:14px 0 0;font-size:1.1rem;font-weight:900;border-top:2px solid var(--pink);margin-top:8px;">
+          <span>Grand Total</span><span style="color:var(--pink)" id="summaryGrand">৳0</span>
+        </div>
+        <button class="place-order-btn" onclick="placeOrder()">✅ Place Order (COD)</button>
+        <button class="back-link" onclick="window.location.href='menu.html'">← Continue Shopping</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><span id="toastMsg"></span></div>
+
+<footer>
+  <div class="brand">DineFlow</div>
+  <p style="margin-top:6px;">A Web-Based Dine-In &amp; Online Order Management System</p>
+  <p style="margin-top:4px;opacity:.5;">© 2026 DineFlow ·</p>
+</footer>
+
+<script src="js/toast.js"></script>
+<script>
+  const appState = { currentUser: null };
+
+  function doLogout(){
+    localStorage.removeItem('dineflow_user');
+    const btn = document.getElementById('authNavBtn');
+    btn.textContent = 'Sign In';
+    btn.onclick = () => window.location.href = 'index.html';
+    showToast('👋 Logged out!');
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const savedUser = localStorage.getItem('dineflow_user');
+    if (savedUser) {
+      const user = JSON.parse(savedUser);
+      const btn = document.getElementById('authNavBtn');
+      btn.textContent = '👤 ' + user.name.split(' ')[0];
+      btn.onclick = doLogout;
+      const nameEl = document.getElementById('co-name');
+      const phoneEl = document.getElementById('co-phone');
+      const areaEl = document.getElementById('co-area');
+      const addrEl = document.getElementById('co-address');
+      if (nameEl && user.name) nameEl.value = user.name;
+      if (phoneEl && user.phone) phoneEl.value = user.phone;
+      if (areaEl && user.area) areaEl.value = user.area;
+      if (addrEl && user.address) addrEl.value = user.address;
+    }
+
+    const saved = localStorage.getItem('dineflow_cart');
+    if (!saved || JSON.parse(saved).length === 0) {
+      document.getElementById('orderSummary').innerHTML =
+        '<p style="color:var(--muted);text-align:center;padding:20px;font-weight:700;">Your cart is empty! <a href="menu.html" style="color:var(--pink);">Go to Menu →</a></p>';
+      return;
+    }
+    const cart = JSON.parse(saved);
+    const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
+    const vat      = Math.round(subtotal * 0.05);
+
+    document.getElementById('orderSummary').innerHTML = cart.map(c => `
+      <div class="order-summary-item">
+        <span>${c.emoji} ${c.name} × ${c.qty}</span>
+        <span>৳${c.price * c.qty}</span>
+      </div>`).join('');
+
+    document.getElementById('summarySubtotal').textContent = `৳${subtotal}`;
+    document.getElementById('summaryVat').textContent      = `৳${vat}`;
+    document.getElementById('summaryGrand').textContent    = `৳${subtotal + vat}`;
+  });
+
+  function placeOrder() {
+    const name  = document.getElementById('co-name').value.trim();
+    const phone = document.getElementById('co-phone').value.trim();
+    const addr  = document.getElementById('co-address').value.trim();
+    if (!name || !phone || !addr) { showToast('⚠️ Please fill in all delivery details!'); return; }
+
+    const orderId = 'DF-' + Math.floor(1000 + Math.random() * 9000);
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    localStorage.setItem('dineflow_order_id', orderId);
+    localStorage.setItem('dineflow_order_time', timeStr);
+    localStorage.removeItem('dineflow_cart');
+
+    showToast(`🎉 Order placed! #${orderId}`);
+    setTimeout(() => window.location.href = 'tracking.html', 1200);
+  }
+</script>
+</body>
+</html>

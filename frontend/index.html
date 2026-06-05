@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>DineFlow – Order Delicious Food</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/navbar.css">
+  <link rel="stylesheet" href="css/cart.css">
+  <link rel="stylesheet" href="css/menu.css">
+</head>
+<body>
+
+<!-- promo -->
+<div class="promo-band" id="promoBand">
+  🎉 Free Delivery on all orders! Order now and enjoy fresh food at your door &nbsp;·&nbsp;
+  <button class="promo-close" onclick="closePromo()">✕</button>
+</div>
+
+<!-- NavBar -->
+<nav>
+  <div class="nav-logo" onclick="window.location.href='index.html'">DineFlow</div>
+  <div class="nav-links">
+    <a href="index.html" class="active">🏠 Home</a>
+    <a href="menu.html">🍽️ Menu</a>
+    <a href="tracking.html">📍 Track Order</a>
+    <a href="reviews.html">⭐ Reviews</a>
+  </div>
+  <div class="nav-right">
+    <button class="auth-btn" id="authNavBtn" onclick="openModal('login')">Sign In</button>
+    <button class="cart-btn" onclick="toggleCart()">
+      🛒 Cart <span class="cart-count" id="cartCount">0</span>
+    </button>
+  </div>
+</nav>
+
+<!-- HOME PAGE -->
+<div style="padding-top: calc(var(--nav-h) + var(--promo-h));" class="page-anim">
+  <div class="hero">
+    <div class="hero-blob"></div>
+    <div class="hero-blob"></div>
+    <h1>Hungry? 🍔<br/>We've Got You Covered!</h1>
+    <p>Order your favourite meals — delivered fast, fresh &amp; delicious 😋</p>
+    <div class="hero-search">
+      <input type="text" placeholder="Search for burgers, biryani, pizza…" oninput="filterMenu(this.value)" autocomplete="off"/>
+      <button onclick="window.location.href='menu.html'">Search 🔍</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Browse by <span>Category</span> 🍴</div>
+    <div class="categories">
+      <div class="cat-chip active" onclick="filterCategory('all',   this)">🍽️ All</div>
+      <div class="cat-chip"        onclick="filterCategory('burger', this)">🍔 Burgers</div>
+      <div class="cat-chip"        onclick="filterCategory('rice',   this)">🍛 Rice &amp; Biryani</div>
+      <div class="cat-chip"        onclick="filterCategory('pizza',  this)">🍕 Pizza</div>
+      <div class="cat-chip"        onclick="filterCategory('dessert',this)">🧁 Desserts</div>
+      <div class="cat-chip"        onclick="filterCategory('drinks', this)">🥤 Drinks</div>
+    </div>
+  </div>
+
+  <div class="section" style="padding-top:0">
+    <div class="section-title">🔥 <span>Popular</span> Right Now</div>
+    <div class="food-grid" id="homeGrid"></div>
+  </div>
+</div>
+
+<!-- Cart Sidebar -->
+<div class="cart-overlay" id="cartOverlay" onclick="toggleCart()"></div>
+<div class="cart-sidebar" id="cartSidebar">
+  <div class="cart-header">
+    <h2>🛒 Your Cart</h2>
+    <button class="cart-close" onclick="toggleCart()">✕</button>
+  </div>
+  <div class="cart-items" id="cartItems">
+    <div class="empty-cart"><div class="emoji">🛒</div><p>Your cart is empty!<br/>Add some delicious items</p></div>
+  </div>
+  <div class="cart-footer" id="cartFooter" style="display:none;">
+    <div class="cart-total"><span>Subtotal</span><span class="amount" id="cartTotal">৳0</span></div>
+    <button class="checkout-btn" onclick="goCheckout()">Proceed to Checkout →</button>
+  </div>
+</div>
+
+<!-- AUTH MODALS -->
+<div class="modal-overlay" id="loginModal">
+  <div class="modal">
+    <button class="modal-close-x" onclick="closeModal('login')">✕</button>
+    <div class="modal-logo">DineFlow</div>
+    <h2>Welcome Back! 👋</h2>
+    <div class="sub">Sign in to your account</div>
+    <div class="form-group"><label>Email Address</label><input type="email" id="li-email" placeholder="you@email.com"/></div>
+    <div class="form-group"><label>Password</label><input type="password" id="li-pw" placeholder="••••••••"/></div>
+    <button class="modal-submit" onclick="doLogin()">Sign In →</button>
+    <div class="modal-switch">Don't have an account? <a onclick="openModal('signup')">Sign Up</a></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="signupModal">
+  <div class="modal">
+    <button class="modal-close-x" onclick="closeModal('signup')">✕</button>
+    <div class="modal-logo">DineFlow</div>
+    <h2>Create Account 🎉</h2>
+    <div class="sub">Join DineFlow and start ordering!</div>
+    <div class="form-row">
+      <div class="form-group"><label>First Name</label><input type="text" id="su-fname" placeholder="Rahim"/></div>
+      <div class="form-group"><label>Last Name</label><input type="text" id="su-lname" placeholder="Uddin"/></div>
+    </div>
+    <div class="form-group"><label>Email Address</label><input type="email" id="su-email" placeholder="you@email.com"/></div>
+    <div class="form-group"><label>Phone Number</label><input type="text" id="su-phone" placeholder="+880 1XXX XXXXXX"/></div>
+    <div class="form-group"><label>Area / Locality</label><input type="text" id="su-area" placeholder="Dhanmondi, Mymensingh…"/></div>
+    <div class="form-group"><label>Delivery Address</label><textarea id="su-addr" rows="2" placeholder="House, Road, Landmark…"></textarea></div>
+    <div class="form-group"><label>Password</label><input type="password" id="su-pw" placeholder="Min 8 characters"/></div>
+    <button class="modal-submit" onclick="doSignup()">Create Account 🚀</button>
+    <div class="modal-switch">Already have an account? <a onclick="openModal('login')">Sign In</a></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><span id="toastMsg"></span></div>
+
+<footer>
+  <div class="brand">DineFlow</div>
+  <p style="margin-top:6px;">A Web-Based Dine-In &amp; Online Order Management System</p>
+  <p style="margin-top:4px;opacity:.5;">© 2026 DineFlow ·</p>
+</footer>
+
+<script src="js/data.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/toast.js"></script>
+<script src="js/auth.js"></script>
+<script>
+  //Global state
+  const appState = {
+    cart: JSON.parse(localStorage.getItem('dineflow_cart') || '[]'),
+    currentUser: null,
+    reviews: [...INITIAL_REVIEWS],
+    lastOrderId: null,
+    deliveryInfo: null
+  };
+
+  function saveCart() {
+    localStorage.setItem('dineflow_cart', JSON.stringify(appState.cart));
+  }
+
+  // Cart functions
+  function addToCart(id) {
+    const item = MENU.find(m => m.id === id);
+    const existing = appState.cart.find(c => c.id === id);
+    if (existing) { existing.qty++; }
+    else { appState.cart.push({ ...item, qty: 1 }); }
+    saveCart();
+    updateCartUI();
+    showToast(`✅ ${item.name} added to cart!`);
+    event.target.style.transform = 'scale(1.35)';
+    setTimeout(() => { event.target.style.transform = ''; }, 200);
+  }
+
+  function changeQty(id, delta) {
+    const idx = appState.cart.findIndex(c => c.id === id);
+    if (idx === -1) return;
+    appState.cart[idx].qty += delta;
+    if (appState.cart[idx].qty <= 0) appState.cart.splice(idx, 1);
+    saveCart();
+    updateCartUI();
+  }
+
+  function updateCartUI() {
+    const total = appState.cart.reduce((s, i) => s + i.price * i.qty, 0);
+    const count = appState.cart.reduce((s, i) => s + i.qty, 0);
+    document.getElementById('cartCount').textContent = count;
+    const itemsEl  = document.getElementById('cartItems');
+    const footerEl = document.getElementById('cartFooter');
+    if (!appState.cart.length) {
+      itemsEl.innerHTML = `<div class="empty-cart"><div class="emoji">🛒</div><p>Your cart is empty!<br/>Add some delicious items</p></div>`;
+      footerEl.style.display = 'none'; return;
+    }
+    itemsEl.innerHTML = appState.cart.map(c => `
+      <div class="cart-item">
+        <div class="cart-item-emoji">${c.emoji}</div>
+        <div class="cart-item-info">
+          <div class="cart-item-name">${c.name}</div>
+          <div class="cart-item-price">৳${c.price} × ${c.qty} = ৳${c.price * c.qty}</div>
+        </div>
+        <div class="qty-control">
+          <button class="qty-btn" onclick="changeQty(${c.id}, -1)">−</button>
+          <span class="qty-num">${c.qty}</span>
+          <button class="qty-btn" onclick="changeQty(${c.id}, 1)">+</button>
+        </div>
+      </div>`).join('');
+    document.getElementById('cartTotal').textContent = `৳${total}`;
+    footerEl.style.display = 'block';
+  }
+
+  function toggleCart() {
+    document.getElementById('cartSidebar').classList.toggle('open');
+    document.getElementById('cartOverlay').classList.toggle('open');
+  }
+
+  function goCheckout() {
+    if (!appState.cart.length) { showToast('⚠️ Your cart is empty!'); return; }
+    toggleCart();
+    window.location.href = 'cart.html';
+  }
+
+  let activeCategory = 'all', searchQuery = '';
+  function filterCategory(cat, el) {
+    activeCategory = cat;
+    document.querySelectorAll('.cat-chip').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    applyFilter();
+  }
+  function filterMenu(q) { searchQuery = q.toLowerCase(); applyFilter(); }
+  function applyFilter() {
+    let items = MENU;
+    if (activeCategory !== 'all') items = items.filter(i => i.cat === activeCategory);
+    if (searchQuery) items = items.filter(i =>
+      i.name.toLowerCase().includes(searchQuery) || i.desc.toLowerCase().includes(searchQuery));
+    renderGrid(items, 'homeGrid');
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    initAuth();
+    renderGrid(MENU, 'homeGrid');
+    updateCartUI();
+    document.getElementById('loginModal').addEventListener('click', function(e){ if(e.target===this) closeModal('login'); });
+    document.getElementById('signupModal').addEventListener('click', function(e){ if(e.target===this) closeModal('signup'); });
+  });
+</script>
+<script>
+  function closePromo() {
+    const band = document.getElementById('promoBand');
+    band.style.display = 'none';
+    document.querySelector('nav').style.top = '0';
+    const pageEl = document.querySelector('.page-anim');
+    if (pageEl) pageEl.style.paddingTop = 'var(--nav-h)';
+  }
+</script>
+</body>
+</html>

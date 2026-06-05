@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Track Order – DineFlow</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/navbar.css">
+  <link rel="stylesheet" href="css/cart.css">
+  <link rel="stylesheet" href="css/menu.css">
+<style>:root { --promo-h: 0px; }</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo" onclick="window.location.href='index.html'">DineFlow</div>
+  <div class="nav-links">
+    <a href="index.html">🏠 Home</a>
+    <a href="menu.html">🍽️ Menu</a>
+    <a href="tracking.html" class="active">📍 Track Order</a>
+    <a href="reviews.html">⭐ Reviews</a>
+  </div>
+  <div class="nav-right">
+    <button class="auth-btn" id="authNavBtn" onclick="openModal('login')">Sign In</button>
+    <button class="cart-btn" onclick="window.location.href='menu.html'">🛒 Menu</button>
+  </div>
+</nav>
+
+<div style="padding-top: var(--nav-h);" class="page-anim">
+  <div class="tracking-wrap">
+
+    <div id="noOrderBox" style="display:none; text-align:center; padding:60px 20px;">
+      <div style="font-size:4rem;">📋</div>
+      <h2 style="margin-top:16px;font-weight:900;">No Active Order</h2>
+      <p style="color:var(--muted);font-weight:600;margin-top:8px;">You haven't placed any order yet.</p>
+      <a href="menu.html" style="display:inline-block;margin-top:24px;
+        background:linear-gradient(135deg,var(--pink),var(--orange));
+        color:#fff;border-radius:50px;padding:12px 32px;
+        font-family:'Nunito',sans-serif;font-weight:800;text-decoration:none;">
+        🍽️ Order Now
+      </a>
+    </div>
+    <div id="orderTrackBox" style="display:none;">
+      <div class="track-header">
+        <div class="track-order-id" id="trackOrderId">Order #DF-0000</div>
+        <h2>Tracking Your Order 🛵</h2>
+        <p>Estimated delivery: 30–40 minutes</p>
+      </div>
+
+      <div class="track-steps">
+        <div class="track-step">
+          <div class="step-dot done" id="step1dot">✅</div>
+          <div class="step-info">
+            <h3>Order Confirmed</h3>
+            <p>We've received your order successfully</p>
+            <div class="step-time" id="t1time"></div>
+          </div>
+        </div>
+
+        <div class="track-step">
+          <div class="step-dot active" id="step2dot">👨‍🍳</div>
+          <div class="step-info">
+            <h3>Preparing Your Food</h3>
+            <p>Our kitchen is cooking your order with love</p>
+            <div class="step-time">~10 min</div>
+          </div>
+        </div>
+
+        <div class="track-step">
+          <div class="step-dot pending" id="step3dot">🛵</div>
+          <div class="step-info">
+            <h3>Out for Delivery</h3>
+            <p>Rider will pick up your order soon</p>
+          </div>
+        </div>
+
+        <div class="track-step">
+          <div class="step-dot pending" id="step4dot">🏠</div>
+          <div class="step-info">
+            <h3>Delivered</h3>
+            <p>Enjoy your meal! 😋</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="support-box">
+        <p style="font-weight:700;color:var(--muted);font-size:.9rem;">Need help with your order?</p>
+        <button class="support-btn" onclick="showToast('📞 Connecting to support…')">Contact Support</button>
+      </div>
+
+      <div style="text-align:center;margin-top:32px;">
+        <a href="reviews.html" style="display:inline-block;
+          background:linear-gradient(135deg,var(--pink),var(--orange));
+          color:#fff;border-radius:50px;padding:12px 28px;
+          font-family:'Nunito',sans-serif;font-weight:800;font-size:.95rem;text-decoration:none;">
+          ⭐ Leave a Review
+        </a>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"><span id="toastMsg"></span></div>
+
+<footer>
+  <div class="brand">DineFlow</div>
+  <p style="margin-top:6px;">A Web-Based Dine-In &amp; Online Order Management System</p>
+  <p style="margin-top:4px;opacity:.5;">© 2026 DineFlow ·</p>
+</footer>
+
+<script src="js/toast.js"></script>
+<script>
+  const appState = { currentUser: null };
+  function openModal(){}
+  function doLogout(){
+    localStorage.removeItem('dineflow_user');
+    appState.currentUser = null;
+    const btn = document.getElementById('authNavBtn');
+    btn.textContent = 'Sign In';
+    btn.onclick = () => window.location.href = 'index.html';
+    showToast('👋 Logged out!');
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    //sign in state restore
+    const savedUser = localStorage.getItem('dineflow_user');
+    if (savedUser) {
+      const user = JSON.parse(savedUser);
+      appState.currentUser = user;
+      const btn = document.getElementById('authNavBtn');
+      btn.textContent = '👤 ' + user.name.split(' ')[0];
+      btn.onclick = doLogout;
+    }
+    const orderId  = localStorage.getItem('dineflow_order_id');
+    const orderTime = localStorage.getItem('dineflow_order_time');
+
+    if (!orderId) {
+      document.getElementById('noOrderBox').style.display = 'block';
+    } else {
+      document.getElementById('orderTrackBox').style.display = 'block';
+      document.getElementById('trackOrderId').textContent = 'Order #' + orderId;
+      document.getElementById('t1time').textContent = orderTime || '';
+    }
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sign In – DineFlow</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/navbar.css">
+  <link rel="stylesheet" href="css/menu.css">
+  <style>
+    .auth-page {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 100px 16px 40px;
+      background: linear-gradient(135deg, #FFF5F8 0%, #FFE8EF 100%);
+    }
+    .auth-card {
+      background: #fff;
+      border-radius: 24px;
+      padding: 40px;
+      width: min(480px, 100%);
+      box-shadow: 0 8px 40px rgba(255,45,120,.12);
+      animation: popIn .35s cubic-bezier(.4,0,.2,1);
+    }
+    @keyframes popIn {
+      from { transform: scale(.92); opacity: 0; }
+      to   { transform: scale(1);   opacity: 1; }
+    }
+    .auth-logo {
+      font-family: 'Pacifico', cursive; font-size: 2rem;
+      background: linear-gradient(135deg, var(--pink), var(--orange));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      text-align: center; margin-bottom: 8px;
+    }
+    .auth-card h2  { text-align: center; font-size: 1.4rem; font-weight: 900; margin-bottom: 6px; }
+    .auth-card .sub{ text-align: center; color: var(--muted); font-size: .9rem; margin-bottom: 28px; font-weight: 600; }
+    .auth-switch   { text-align: center; margin-top: 16px; font-size: .9rem; font-weight: 600; color: var(--muted); }
+    .auth-switch a { color: var(--pink); font-weight: 800; }
+  </style>
+</head>
+<body>
+<nav>
+  <div class="nav-logo" onclick="window.location.href='index.html'">DineFlow</div>
+  <div class="nav-links">
+    <a href="index.html">🏠 Home</a>
+    <a href="menu.html">🍽️ Menu</a>
+    <a href="tracking.html">📍 Track Order</a>
+    <a href="reviews.html">⭐ Reviews</a>
+  </div>
+  <div class="nav-right">
+    <button class="auth-btn" onclick="window.location.href='register.html'">Sign Up</button>
+  </div>
+</nav>
+
+<!-- Login form -->
+<div class="auth-page">
+  <div class="auth-card">
+    <div class="auth-logo">DineFlow</div>
+    <h2>Welcome Back! 👋</h2>
+    <div class="sub">Sign in to your account</div>
+
+    <div class="form-group">
+      <label>Email Address</label>
+      <input type="email" id="li-email" placeholder="you@email.com"/>
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="li-pw" placeholder="••••••••"/>
+    </div>
+
+    <button class="modal-submit" onclick="doLogin()">Sign In →</button>
+
+    <div class="auth-switch">
+      Don't have an account? <a href="register.html">Sign Up</a>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><span id="toastMsg"></span></div>
+<script src="js/toast.js"></script>
+<script>
+  function doLogin() {
+    const email = document.getElementById('li-email').value.trim();
+    const pw    = document.getElementById('li-pw').value;
+    if (!email || !pw) { showToast('⚠️ Please fill in all fields'); return; }
+
+    const user = { name: email.split('@')[0], email };
+    sessionStorage.setItem('dineflow_user', JSON.stringify(user));
+    showToast(`👋 Welcome back, ${user.name}!`);
+    setTimeout(() => window.location.href = 'index.html', 1000);
+  }
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter') doLogin();
+  });
+</script>
+</body>
+</html>
