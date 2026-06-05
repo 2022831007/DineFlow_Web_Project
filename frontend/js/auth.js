@@ -7,6 +7,8 @@ function initAuth() {
     if (btn) {
       btn.textContent = '👤 ' + user.name.split(' ')[0];
       btn.onclick = doLogout;
+
+      
     }
   }
 }
