@@ -9,6 +9,7 @@ const MENU = [
   },
   {
     id: 2,
+    
     name: 'Chicken Zinger Burger',
     desc: 'Crispy fried chicken with spicy mayo & coleslaw',
     price: 180, emoji: '🍔', cat: 'burger',
