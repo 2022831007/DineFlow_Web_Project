@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Review Management - DineFlow Admin</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/admin.css">
+</head>
+<body class="admin-body">
+
+  <!-- Sidebar -->
+  <aside class="admin-sidebar" id="adminSidebar">
+    <div class="admin-brand" onclick="window.location.href='index.html'">
+      DineFlow Admin
+    </div>
+    <div class="admin-menu">
+      <a href="admin_dashboard.html"><span class="admin-menu-icon">📊</span> Dashboard</a>
+      <a href="admin_food.html"><span class="admin-menu-icon">🍔</span> Food Menu</a>
+      <a href="admin_inventory.html"><span class="admin-menu-icon">📦</span> Inventory</a>
+      <a href="admin_billing.html"><span class="admin-menu-icon">🧾</span> Billing</a>
+      <a href="admin_reviews.html" class="active"><span class="admin-menu-icon">⭐</span> Reviews</a>
+      <a href="admin_sales.html"><span class="admin-menu-icon">📈</span> Sales Report</a>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="admin-main">
+    <header class="admin-navbar">
+      <div class="admin-nav-left">
+        <button class="menu-toggle" onclick="toggleAdminMenu()">☰</button>
+        <div class="admin-nav-title">Review Management</div>
+      </div>
+      <div class="admin-nav-right">
+        <div class="admin-profile">
+          <span>Admin User</span>
+          <div class="admin-avatar">A</div>
+        </div>
+      </div>
+    </header>
+
+    <div class="admin-content page-anim">
+      
+      <!-- Review Stats -->
+      <div class="stats-grid" id="reviewStats">
+        <!-- Rendered via JS -->
+      </div>
+
+      <!-- Reviews Table -->
+      <div class="admin-card">
+        <div class="admin-card-header">
+          <div class="admin-card-title">Customer Reviews</div>
+          <div class="admin-actions">
+            <input type="text" id="reviewSearch" class="admin-search" placeholder="Search reviews..." onkeyup="filterReviews()">
+            <select id="reviewFilter" class="admin-search" onchange="filterReviews()" style="width: 150px;">
+              <option value="all">All Ratings</option>
+              <option value="5">5 Stars</option>
+              <option value="4">4 Stars</option>
+              <option value="3">3 Stars</option>
+              <option value="2">2 Stars</option>
+              <option value="1">1 Star</option>
+            </select>
+          </div>
+        </div>
+        <div class="table-responsive">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Customer</th>
+                <th>Rating</th>
+                <th>Review Text</th>
+                <th>Date</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="reviewsTableBody">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <script src="js/data.js"></script>
+  <script src="js/admin.js"></script>
+  <script>
+    // Augment initial reviews with ID and status for admin purposes
+    let localReviews = INITIAL_REVIEWS.map((r, i) => ({
+      ...r,
+      id: 'REV-' + (1001 + i),
+      status: 'Pending' // Default for demo
+    }));
+    // Make one approved
+    if(localReviews.length > 0) localReviews[0].status = 'Approved';
+
+    document.addEventListener('DOMContentLoaded', () => {
+      renderReviewStats();
+      renderReviewsTable(localReviews);
+    });
+
+    function renderReviewStats() {
+      const total = localReviews.length;
+      const avg = total > 0 ? (localReviews.reduce((sum, r) => sum + r.rating, 0) / total).toFixed(1) : 0;
+      const pending = localReviews.filter(r => r.status === 'Pending').length;
+
+      document.getElementById('reviewStats').innerHTML = `
+        <div class="stat-card">
+          <div class="stat-icon yellow">⭐</div>
+          <div class="stat-info">
+            <h3>Average Rating</h3>
+            <div class="stat-value">${avg} / 5.0</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon green">💬</div>
+          <div class="stat-info">
+            <h3>Total Reviews</h3>
+            <div class="stat-value">${total}</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon warning">⏳</div>
+          <div class="stat-info">
+            <h3>Pending Approval</h3>
+            <div class="stat-value">${pending}</div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderReviewsTable(data) {
+      const tbody = document.getElementById('reviewsTableBody');
+      tbody.innerHTML = data.map(r => {
+        let badgeClass = 'warning';
+        if (r.status === 'Approved') badgeClass = 'success';
+        if (r.status === 'Rejected') badgeClass = 'danger';
+
+        return `
+          <tr>
+            <td>${r.id}</td>
+            <td>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <div style="width: 30px; height: 30px; border-radius: 50%; background: ${r.color}; display: flex; align-items: center; justify-content: center;">${r.avatar}</div>
+                <strong>${r.name}</strong>
+              </div>
+            </td>
+            <td style="color: var(--yellow);">${'⭐'.repeat(r.rating)}</td>
+            <td style="max-width: 300px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${r.text}">${r.text}</td>
+            <td style="color: var(--muted); font-size: 0.85rem;">${r.date}</td>
+            <td><span class="status-badge ${badgeClass}">${r.status}</span></td>
+            <td>
+              <div class="action-btns">
+                ${r.status === 'Pending' ? `
+                  <button class="icon-btn edit" onclick="updateStatus('${r.id}', 'Approved')" title="Approve">✅</button>
+                  <button class="icon-btn delete" onclick="updateStatus('${r.id}', 'Rejected')" title="Reject">❌</button>
+                ` : ''}
+                <button class="icon-btn delete" onclick="deleteReview('${r.id}')" title="Delete">🗑️</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function filterReviews() {
+      const q = document.getElementById('reviewSearch').value.toLowerCase();
+      const rating = document.getElementById('reviewFilter').value;
+      
+      let filtered = localReviews.filter(r => {
+        const matchQ = r.name.toLowerCase().includes(q) || r.text.toLowerCase().includes(q) || r.id.toLowerCase().includes(q);
+        const matchRating = rating === 'all' || r.rating.toString() === rating;
+        return matchQ && matchRating;
+      });
+      renderReviewsTable(filtered);
+    }
+
+    function updateStatus(id, newStatus) {
+      const idx = localReviews.findIndex(r => r.id === id);
+      if(idx > -1) {
+        localReviews[idx].status = newStatus;
+        renderReviewStats();
+        filterReviews();
+      }
+    }
+
+    function deleteReview(id) {
+      if(confirm('Are you sure you want to delete this review?')) {
+        localReviews = localReviews.filter(r => r.id !== id);
+        renderReviewStats();
+        filterReviews();
+      }
+    }
+  </script>
+</body>
+</html>

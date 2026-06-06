@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sales Report - DineFlow Admin</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/admin.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="admin-body">
+
+  <!-- Sidebar -->
+  <aside class="admin-sidebar" id="adminSidebar">
+    <div class="admin-brand" onclick="window.location.href='index.html'">
+      DineFlow Admin
+    </div>
+    <div class="admin-menu">
+      <a href="admin_dashboard.html"><span class="admin-menu-icon">📊</span> Dashboard</a>
+      <a href="admin_food.html"><span class="admin-menu-icon">🍔</span> Food Menu</a>
+      <a href="admin_inventory.html"><span class="admin-menu-icon">📦</span> Inventory</a>
+      <a href="admin_billing.html"><span class="admin-menu-icon">🧾</span> Billing</a>
+      <a href="admin_reviews.html"><span class="admin-menu-icon">⭐</span> Reviews</a>
+      <a href="admin_sales.html" class="active"><span class="admin-menu-icon">📈</span> Sales Report</a>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="admin-main">
+    <header class="admin-navbar">
+      <div class="admin-nav-left">
+        <button class="menu-toggle" onclick="toggleAdminMenu()">☰</button>
+        <div class="admin-nav-title">Sales Analytics</div>
+      </div>
+      <div class="admin-nav-right">
+        <div class="admin-profile">
+          <span>Admin User</span>
+          <div class="admin-avatar">A</div>
+        </div>
+      </div>
+    </header>
+
+    <div class="admin-content page-anim" id="printableReport">
+      
+      <!-- Report Header & Filters -->
+      <div class="admin-card no-print" style="margin-bottom: 24px;">
+        <div class="admin-card-header" style="margin-bottom: 0;">
+          <div class="admin-actions">
+            <select id="reportPeriod" class="admin-search" onchange="updateCharts()">
+              <option value="this_week">This Week</option>
+              <option value="last_week">Last Week</option>
+              <option value="this_month">This Month</option>
+              <option value="this_year">This Year</option>
+            </select>
+            <input type="date" class="admin-search" id="startDate" onchange="updateCharts()">
+            <span style="display:flex; align-items:center; font-weight: bold;">to</span>
+            <input type="date" class="admin-search" id="endDate" onchange="updateCharts()">
+          </div>
+          <div class="admin-actions">
+            <button class="admin-btn secondary" onclick="exportCSV()">⬇️ Export CSV</button>
+            <button class="admin-btn" onclick="window.print()">🖨️ Print Report</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="print-only-header" style="display: none; margin-bottom: 20px;">
+        <h2 style="font-family: 'Pacifico', cursive; color: var(--pink);">DineFlow</h2>
+        <h3>Sales Analytics Report</h3>
+        <p id="printDateRange"></p>
+      </div>
+
+      <!-- Report Cards -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon green">📊</div>
+          <div class="stat-info">
+            <h3>Daily Sales</h3>
+            <div class="stat-value" id="dailySales">৳3,200</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon orange">📈</div>
+          <div class="stat-info">
+            <h3>Weekly Sales</h3>
+            <div class="stat-value" id="weeklySales">৳21,500</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon purple">🗓️</div>
+          <div class="stat-info">
+            <h3>Monthly Sales</h3>
+            <div class="stat-value" id="monthlySales">৳85,000</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon pink">💰</div>
+          <div class="stat-info">
+            <h3>Total Revenue</h3>
+            <div class="stat-value" id="totalRev">৳250,000</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Charts -->
+      <div class="charts-grid">
+        <div class="admin-card">
+          <h3 style="margin-bottom: 16px;">Revenue Trend</h3>
+          <div class="chart-container">
+            <canvas id="revenueChart"></canvas>
+          </div>
+        </div>
+        
+        <div class="admin-card">
+          <h3 style="margin-bottom: 16px;">Top Selling Categories</h3>
+          <div class="chart-container">
+            <canvas id="categoryChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="admin-card">
+        <h3 style="margin-bottom: 16px;">Top Selling Foods</h3>
+        <div class="table-responsive">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Rank</th>
+                <th>Food Name</th>
+                <th>Category</th>
+                <th>Units Sold</th>
+                <th>Revenue</th>
+              </tr>
+            </thead>
+            <tbody id="topFoodsTable">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <style>
+    @media print {
+      body * { visibility: hidden; }
+      #printableReport, #printableReport * { visibility: visible; }
+      #printableReport { position: absolute; left: 0; top: 0; width: 100%; box-shadow: none; transform: none !important; }
+      .no-print { display: none !important; }
+      .admin-sidebar { display: none; }
+      .admin-navbar { display: none; }
+      .print-only-header { display: block !important; }
+      .charts-grid { grid-template-columns: 1fr; }
+      .chart-container { height: 250px; }
+      .stat-card { border: 1px solid #ddd; box-shadow: none; padding: 15px; }
+    }
+  </style>
+
+  <script src="js/data.js"></script>
+  <script src="js/admin.js"></script>
+  <script>
+    let revChart, catChart;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      initCharts();
+      renderTopFoods();
+      
+      // Set default dates
+      const today = new Date();
+      const lastWeek = new Date(today);
+      lastWeek.setDate(lastWeek.getDate() - 7);
+      
+      document.getElementById('endDate').value = today.toISOString().split('T')[0];
+      document.getElementById('startDate').value = lastWeek.toISOString().split('T')[0];
+    });
+
+    function initCharts() {
+      const revCtx = document.getElementById('revenueChart').getContext('2d');
+      const catCtx = document.getElementById('categoryChart').getContext('2d');
+
+      // Colors from variables
+      const pink = '#FF2D78';
+      const orange = '#FF6B2B';
+      const yellow = '#FFD600';
+      const green = '#00C896';
+      const purple = '#7B2FFF';
+
+      revChart = new Chart(revCtx, {
+        type: 'line',
+        data: {
+          labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+          datasets: [{
+            label: 'Revenue (৳)',
+            data: [2100, 3200, 2800, 4100, 5500, 6200, 5800],
+            borderColor: pink,
+            backgroundColor: 'rgba(255, 45, 120, 0.1)',
+            borderWidth: 3,
+            fill: true,
+            tension: 0.4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { beginAtZero: true, grid: { borderDash: [5, 5] } },
+            x: { grid: { display: false } }
+          }
+        }
+      });
+
+      catChart = new Chart(catCtx, {
+        type: 'doughnut',
+        data: {
+          labels: ['Burger', 'Pizza', 'Rice', 'Dessert', 'Drinks'],
+          datasets: [{
+            data: [35, 25, 20, 10, 10],
+            backgroundColor: [pink, orange, yellow, green, purple],
+            borderWidth: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'right' }
+          },
+          cutout: '70%'
+        }
+      });
+    }
+
+    function updateCharts() {
+      // Mock logic to simulate chart updates based on filters
+      const period = document.getElementById('reportPeriod').value;
+      const sd = document.getElementById('startDate').value;
+      const ed = document.getElementById('endDate').value;
+      
+      document.getElementById('printDateRange').textContent = `Period: ${sd} to ${ed} (${period.replace('_', ' ').toUpperCase()})`;
+
+      // Randomize data slightly to show interaction
+      const factor = period === 'this_month' ? 4 : (period === 'this_year' ? 12 : 1);
+      
+      revChart.data.datasets[0].data = revChart.data.datasets[0].data.map(v => Math.floor((Math.random() * 2000 + 2000) * factor));
+      revChart.update();
+
+      catChart.data.datasets[0].data = [Math.random()*40, Math.random()*30, Math.random()*20, Math.random()*15, Math.random()*10];
+      catChart.update();
+
+      document.getElementById('dailySales').textContent = `৳${(Math.floor(Math.random() * 5000) + 1000).toLocaleString()}`;
+      document.getElementById('weeklySales').textContent = `৳${(Math.floor(Math.random() * 20000) + 15000).toLocaleString()}`;
+      
+      alert('Report data updated based on filters.');
+    }
+
+    function renderTopFoods() {
+      // Mock top selling foods based on MENU
+      const top = [...MENU].sort((a,b) => b.price - a.price).slice(0, 5); // Just using price as a proxy for mock rank
+      
+      const html = top.map((f, i) => `
+        <tr>
+          <td><strong style="color: var(--pink);">#${i+1}</strong></td>
+          <td>
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span style="font-size: 1.5rem;">${f.emoji}</span>
+              <strong>${f.name}</strong>
+            </div>
+          </td>
+          <td style="text-transform: capitalize;">${f.cat}</td>
+          <td>${Math.floor(Math.random() * 100 + 50)}</td>
+          <td style="font-weight: bold; color: var(--dark);">৳${Math.floor(Math.random() * 20000 + 5000).toLocaleString()}</td>
+        </tr>
+      `).join('');
+      
+      document.getElementById('topFoodsTable').innerHTML = html;
+    }
+
+    function exportCSV() {
+      // Mock export
+      alert('Exporting report as CSV...');
+      // In a real app, generate CSV blob and trigger download
+    }
+  </script>
+</body>
+</html>

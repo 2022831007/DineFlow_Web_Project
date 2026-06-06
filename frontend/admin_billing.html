@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Billing Management - DineFlow Admin</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/admin.css">
+</head>
+<body class="admin-body">
+
+  <!-- Sidebar -->
+  <aside class="admin-sidebar" id="adminSidebar">
+    <div class="admin-brand" onclick="window.location.href='index.html'">
+      DineFlow Admin
+    </div>
+    <div class="admin-menu">
+      <a href="admin_dashboard.html"><span class="admin-menu-icon">📊</span> Dashboard</a>
+      <a href="admin_food.html"><span class="admin-menu-icon">🍔</span> Food Menu</a>
+      <a href="admin_inventory.html"><span class="admin-menu-icon">📦</span> Inventory</a>
+      <a href="admin_billing.html" class="active"><span class="admin-menu-icon">🧾</span> Billing</a>
+      <a href="admin_reviews.html"><span class="admin-menu-icon">⭐</span> Reviews</a>
+      <a href="admin_sales.html"><span class="admin-menu-icon">📈</span> Sales Report</a>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="admin-main">
+    <header class="admin-navbar">
+      <div class="admin-nav-left">
+        <button class="menu-toggle" onclick="toggleAdminMenu()">☰</button>
+        <div class="admin-nav-title">Billing Management</div>
+      </div>
+      <div class="admin-nav-right">
+        <button class="admin-btn" onclick="openBillModal('generate')">🧾 Generate Bill</button>
+      </div>
+    </header>
+
+    <div class="admin-content page-anim">
+      <!-- Billing Summary -->
+      <div class="stats-grid" id="billingStats">
+        <!-- Rendered via JS -->
+      </div>
+
+      <div class="admin-card">
+        <div class="admin-card-header">
+          <div class="admin-card-title">Bills & Invoices</div>
+          <div class="admin-actions">
+            <input type="text" id="billSearch" class="admin-search" placeholder="Search bills..." onkeyup="filterBills()">
+            <select id="billFilter" class="admin-search" onchange="filterBills()" style="width: 150px;">
+              <option value="all">All Status</option>
+              <option value="Paid">Paid</option>
+              <option value="Pending">Pending</option>
+            </select>
+          </div>
+        </div>
+        <div class="table-responsive">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Bill ID</th>
+                <th>Order No</th>
+                <th>Customer Name</th>
+                <th>Payment Method</th>
+                <th>Date</th>
+                <th>Total Amount</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="billingTableBody">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Generate Bill Modal -->
+  <div class="admin-modal-overlay" id="generateBillModal">
+    <div class="admin-modal">
+      <div class="admin-modal-header">
+        <h2>Generate Bill</h2>
+        <button class="admin-modal-close" onclick="closeAdminModal('generateBillModal')">✕</button>
+      </div>
+      <form id="generateBillForm" onsubmit="generateBill(event)">
+        <div class="admin-form-group">
+          <label>Order Number *</label>
+          <input type="text" id="b-orderNo" required placeholder="e.g. ORD-600">
+        </div>
+        <div class="admin-form-group">
+          <label>Customer Name *</label>
+          <input type="text" id="b-customer" required placeholder="Customer Name">
+        </div>
+        <div class="admin-form-group">
+          <label>Total Amount (৳) *</label>
+          <input type="number" id="b-amount" required min="1" placeholder="0">
+        </div>
+        <div class="admin-form-group">
+          <label>Payment Method *</label>
+          <select id="b-method" required>
+            <option value="Cash">Cash</option>
+            <option value="Card">Card</option>
+            <option value="bKash">bKash</option>
+          </select>
+        </div>
+        <div class="admin-form-group">
+          <label>Status *</label>
+          <select id="b-status" required>
+            <option value="Paid">Paid</option>
+            <option value="Pending">Pending</option>
+          </select>
+        </div>
+        <div class="admin-modal-footer">
+          <button type="button" class="admin-btn secondary" onclick="closeAdminModal('generateBillModal')">Cancel</button>
+          <button type="submit" class="admin-btn">Generate</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- View Bill Modal -->
+  <div class="admin-modal-overlay" id="viewBillModal">
+    <div class="admin-modal" id="printableBillArea">
+      <div class="admin-modal-header" style="border-bottom: 2px dashed #ddd; padding-bottom: 16px;">
+        <div>
+          <h2 style="font-family: 'Pacifico', cursive; color: var(--pink);">DineFlow</h2>
+          <small style="color: var(--muted);">Invoice / Receipt</small>
+        </div>
+        <button class="admin-modal-close no-print" onclick="closeAdminModal('viewBillModal')">✕</button>
+      </div>
+      <div id="billDetailsContent" style="margin-top: 20px;">
+        <!-- Rendered via JS -->
+      </div>
+      <div class="admin-modal-footer no-print" style="border-top: 1px solid #ddd; padding-top: 20px; margin-top: 20px;">
+        <button class="admin-btn secondary" onclick="closeAdminModal('viewBillModal')">Close</button>
+        <button class="admin-btn" onclick="printBill()">🖨️ Print Bill</button>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    @media print {
+      body * { visibility: hidden; }
+      #printableBillArea, #printableBillArea * { visibility: visible; }
+      #printableBillArea { position: absolute; left: 0; top: 0; width: 100%; box-shadow: none; transform: none !important; }
+      .no-print { display: none !important; }
+    }
+  </style>
+
+  <script src="js/data.js"></script>
+  <script src="js/admin.js"></script>
+  <script>
+    let localBills = [...BILLS];
+
+    document.addEventListener('DOMContentLoaded', () => {
+      renderBillingTable(localBills);
+      renderBillingStats();
+    });
+
+    function renderBillingStats() {
+      const totalRevenue = localBills.reduce((sum, b) => sum + b.amount, 0);
+      const paidBills = localBills.filter(b => b.status === 'Paid').length;
+      const pendingBills = localBills.filter(b => b.status === 'Pending').length;
+
+      document.getElementById('billingStats').innerHTML = `
+        <div class="stat-card">
+          <div class="stat-icon green">💰</div>
+          <div class="stat-info">
+            <h3>Total Revenue (All time)</h3>
+            <div class="stat-value">৳${totalRevenue}</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon pink">✅</div>
+          <div class="stat-info">
+            <h3>Paid Bills</h3>
+            <div class="stat-value">${paidBills}</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon warning">⏳</div>
+          <div class="stat-info">
+            <h3>Pending Bills</h3>
+            <div class="stat-value">${pendingBills}</div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderBillingTable(data) {
+      const tbody = document.getElementById('billingTableBody');
+      tbody.innerHTML = data.map(b => {
+        const badgeClass = b.status === 'Paid' ? 'success' : 'warning';
+        
+        return `
+          <tr>
+            <td><strong>${b.id}</strong></td>
+            <td>${b.orderNo}</td>
+            <td>${b.customer}</td>
+            <td>${b.method}</td>
+            <td style="color: var(--muted);">${b.date}</td>
+            <td style="font-weight: 800; color: var(--dark);">৳${b.amount}</td>
+            <td><span class="status-badge ${badgeClass}">${b.status}</span></td>
+            <td>
+              <div class="action-btns">
+                <button class="icon-btn view" onclick="viewBill('${b.id}')" title="View/Print Bill">👁️</button>
+                ${b.status === 'Pending' ? `<button class="icon-btn edit" onclick="markAsPaid('${b.id}')" title="Mark as Paid">💰</button>` : ''}
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function filterBills() {
+      const q = document.getElementById('billSearch').value.toLowerCase();
+      const status = document.getElementById('billFilter').value;
+      
+      let filtered = localBills.filter(b => {
+        const matchQ = b.customer.toLowerCase().includes(q) || b.id.toLowerCase().includes(q) || b.orderNo.toLowerCase().includes(q);
+        const matchStatus = status === 'all' || b.status === status;
+        return matchQ && matchStatus;
+      });
+      renderBillingTable(filtered);
+    }
+
+    function openBillModal(mode) {
+      if(mode === 'generate') {
+        document.getElementById('generateBillForm').reset();
+        openAdminModal('generateBillModal');
+      }
+    }
+
+    function generateBill(e) {
+      e.preventDefault();
+      const orderNo = document.getElementById('b-orderNo').value;
+      const customer = document.getElementById('b-customer').value;
+      const amount = parseInt(document.getElementById('b-amount').value);
+      const method = document.getElementById('b-method').value;
+      const status = document.getElementById('b-status').value;
+      const date = new Date().toISOString().split('T')[0];
+
+      const newId = generateId('B');
+      localBills.unshift({ id: newId, orderNo, customer, amount, method, status, date });
+      
+      closeAdminModal('generateBillModal');
+      renderBillingStats();
+      filterBills();
+      alert('Bill generated successfully!');
+    }
+
+    function markAsPaid(id) {
+      if(confirm('Mark this bill as Paid?')) {
+        const idx = localBills.findIndex(b => b.id === id);
+        if(idx > -1) {
+          localBills[idx].status = 'Paid';
+          renderBillingStats();
+          filterBills();
+        }
+      }
+    }
+
+    function viewBill(id) {
+      const b = localBills.find(b => b.id === id);
+      if(!b) return;
+
+      const detailsHtml = `
+        <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+          <div>
+            <p><strong>Bill To:</strong> ${b.customer}</p>
+            <p><strong>Date:</strong> ${b.date}</p>
+          </div>
+          <div style="text-align: right;">
+            <p><strong>Bill No:</strong> ${b.id}</p>
+            <p><strong>Order No:</strong> ${b.orderNo}</p>
+            <p><strong>Status:</strong> <span style="color: ${b.status === 'Paid' ? 'green' : 'orange'}">${b.status}</span></p>
+          </div>
+        </div>
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+          <tr style="border-bottom: 1px solid #ddd;">
+            <th style="text-align: left; padding: 8px 0;">Description</th>
+            <th style="text-align: right; padding: 8px 0;">Amount</th>
+          </tr>
+          <tr>
+            <td style="padding: 12px 0;">Order Items (${b.orderNo})</td>
+            <td style="text-align: right; padding: 12px 0;">৳${b.amount}</td>
+          </tr>
+        </table>
+        <div style="text-align: right; font-size: 1.2rem; margin-top: 20px;">
+          <strong>Total: ৳${b.amount}</strong>
+        </div>
+        <div style="text-align: center; margin-top: 40px; color: var(--muted); font-size: 0.9rem;">
+          <p>Thank you for dining with DineFlow!</p>
+          <p>Payment Method: ${b.method}</p>
+        </div>
+      `;
+
+      document.getElementById('billDetailsContent').innerHTML = detailsHtml;
+      openAdminModal('viewBillModal');
+    }
+
+    function printBill() {
+      window.print();
+    }
+  </script>
+</body>
+</html>
