@@ -15,6 +15,7 @@ function initAuth() {
 
 function doLogout() {
   localStorage.removeItem('dineflow_user');
+  localStorage.removeItem('dineflow_token');
   appState.currentUser = null;
   const btn = document.getElementById('authNavBtn');
   if (btn) {
@@ -36,29 +37,38 @@ function closeModal(type) {
   if (modal) modal.classList.remove('open');
 }
 
-function doLogin() {
+
+  async function doLogin() {
   const email = document.getElementById('li-email').value.trim();
   const pw    = document.getElementById('li-pw').value;
 
-  if (!email || !pw) {
-    showToast('⚠️ Please fill in all fields');
-    return;
-  }
+  if (!email || !pw) { showToast('⚠️ Please fill in all fields'); return; }
 
-  const user = { name: email.split('@')[0], email };
-  appState.currentUser = user;
-  localStorage.setItem('dineflow_user', JSON.stringify(user));
+  try {
+    const res  = await fetch(`${API_URL}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password: pw })
+    });
+    const data = await res.json();
 
-  const btn = document.getElementById('authNavBtn');
-  if (btn) {
-    btn.textContent = '👤 ' + user.name;
-    btn.onclick = doLogout;
+    if (data.success) {
+      localStorage.setItem('dineflow_token', data.token);
+      localStorage.setItem('dineflow_user', JSON.stringify(data.customer));
+      appState.currentUser = data.customer;
+      const btn = document.getElementById('authNavBtn');
+      if (btn) { btn.textContent = '👤 ' + data.customer.name.split(' ')[0]; btn.onclick = doLogout; }
+      closeModal('login');
+      showToast(`👋 Welcome back, ${data.customer.name}!`);
+    } else {
+      showToast('⚠️ ' + data.message);
+    }
+  } catch (err) {
+    showToast('⚠️ Server connection failed!');
   }
-  closeModal('login');
-  showToast(`👋 Welcome back, ${user.name}!`);
 }
 
-function doSignup() {
+ async function doSignup() {
   const fname = document.getElementById('su-fname').value.trim();
   const lname = document.getElementById('su-lname').value.trim();
   const email = document.getElementById('su-email').value.trim();
@@ -72,15 +82,30 @@ function doSignup() {
     return;
   }
 
-  const user = { name: `${fname} ${lname}`.trim(), email, phone, area, address: addr };
-  appState.currentUser = user;
-  localStorage.setItem('dineflow_user', JSON.stringify(user));
+  try {
+    const res  = await fetch(`${API_URL}/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        first_name: fname, last_name: lname,
+        email, phone, password: pw,
+        area, full_address: addr
+      })
+    });
+    const data = await res.json();
 
-  const btn = document.getElementById('authNavBtn');
-  if (btn) {
-    btn.textContent = '👤 ' + fname;
-    btn.onclick = doLogout;
+    if (data.success) {
+      localStorage.setItem('dineflow_token', data.token);
+      localStorage.setItem('dineflow_user', JSON.stringify(data.customer));
+      appState.currentUser = data.customer;
+      const btn = document.getElementById('authNavBtn');
+      if (btn) { btn.textContent = '👤 ' + data.customer.name.split(' ')[0]; btn.onclick = doLogout; }
+      closeModal('signup');
+      showToast(`🎉 Welcome, ${data.customer.name}!`);
+      } else {
+      showToast('⚠️ ' + data.message);
+    }
+  } catch (err) {
+    showToast('⚠️ Server connection failed!');
   }
-  closeModal('signup');
-  showToast(`🎉 Welcome to DineFlow, ${fname}!`);
 }
