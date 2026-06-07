@@ -84,7 +84,7 @@
 
       <div class="support-box">
         <p style="font-weight:700;color:var(--muted);font-size:.9rem;">Need help with your order?</p>
-        <button class="support-btn" onclick="showToast('📞 Connecting to support…')">Contact Support</button>
+        <button class="support-btn" onclick="window.location.href='mailto:fatema53688@gmail.com'">Contact Support</button>
       </div>
 
       <div style="text-align:center;margin-top:32px;">
@@ -121,8 +121,31 @@
     showToast('👋 Logged out!');
   }
 
-  document.addEventListener('DOMContentLoaded', () => {
-    //sign in state restore
+  function updateSteps(status) {
+    const steps = { pending:1, confirmed:1, preparing:2, ready:3, delivered:4, cancelled:0 };
+    const activeStep = steps[status] || 1;
+    const dots = [
+      document.getElementById('step1dot'),
+      document.getElementById('step2dot'),
+      document.getElementById('step3dot'),
+      document.getElementById('step4dot')
+    ];
+    const emojis = ['✅', '👨‍🍳', '🛵', '🏠'];
+    dots.forEach((dot, i) => {
+      if (i + 1 < activeStep) {
+        dot.className = 'step-dot done';
+        dot.textContent = '✅';
+      } else if (i + 1 === activeStep) {
+        dot.className = 'step-dot active';
+        dot.textContent = emojis[i];
+      } else {
+        dot.className = 'step-dot pending';
+        dot.textContent = emojis[i];
+      }
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', async () => {
     const savedUser = localStorage.getItem('dineflow_user');
     if (savedUser) {
       const user = JSON.parse(savedUser);
@@ -131,17 +154,28 @@
       btn.textContent = '👤 ' + user.name.split(' ')[0];
       btn.onclick = doLogout;
     }
-    const orderId  = localStorage.getItem('dineflow_order_id');
+
+    const orderId = localStorage.getItem('dineflow_order_id');
     const orderTime = localStorage.getItem('dineflow_order_time');
 
     if (!orderId) {
       document.getElementById('noOrderBox').style.display = 'block';
-    } else {
-      document.getElementById('orderTrackBox').style.display = 'block';
-      document.getElementById('trackOrderId').textContent = 'Order #' + orderId;
-      document.getElementById('t1time').textContent = orderTime || '';
+      return;
+    }
+
+    document.getElementById('orderTrackBox').style.display = 'block';
+    document.getElementById('trackOrderId').textContent = 'Order #' + orderId;
+    document.getElementById('t1time').textContent = orderTime || '';
+
+    try {
+      const token = localStorage.getItem('dineflow_token');
+      const res = await fetch(`http://localhost:5000/api/orders/${orderId}`, {
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+      const data = await res.json();
+      if (data.success) updateSteps(data.order.status);
+    } catch (e) {
+      console.log('Could not fetch order status');
     }
   });
 </script>
-</body>
-</html>

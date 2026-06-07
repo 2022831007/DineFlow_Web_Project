@@ -153,6 +153,7 @@
 
     if (data.success) {
       localStorage.setItem('dineflow_order_id', data.order.order_code);
+      localStorage.setItem('dineflow_order_time', new Date().toLocaleTimeString('en-BD', {hour:'2-digit', minute:'2-digit'}));
       localStorage.removeItem('dineflow_cart');
       showToast(`🎉 Order placed! #${data.order.order_code}`);
       setTimeout(() => window.location.href = 'tracking.html', 1200);
