@@ -78,7 +78,7 @@
   <p style="margin-top:6px;">A Web-Based Dine-In &amp; Online Order Management System</p>
   <p style="margin-top:4px;opacity:.5;">© 2026 DineFlow ·</p>
 </footer>
-
+<script src="js/api.js"></script>
 <script src="js/toast.js"></script>
 <script>
   const appState = { currentUser: null };
@@ -129,23 +129,40 @@
     document.getElementById('summaryGrand').textContent    = `৳${subtotal + vat}`;
   });
 
-  function placeOrder() {
-    const name  = document.getElementById('co-name').value.trim();
-    const phone = document.getElementById('co-phone').value.trim();
-    const addr  = document.getElementById('co-address').value.trim();
-    if (!name || !phone || !addr) { showToast('⚠️ Please fill in all delivery details!'); return; }
+  async function placeOrder() {
+  const name  = document.getElementById('co-name').value.trim();
+  const phone = document.getElementById('co-phone').value.trim();
+  const area  = document.getElementById('co-area').value.trim();
+  const addr  = document.getElementById('co-address').value.trim();
 
-    const orderId = 'DF-' + Math.floor(1000 + Math.random() * 9000);
-    const now = new Date();
-    const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-    localStorage.setItem('dineflow_order_id', orderId);
-    localStorage.setItem('dineflow_order_time', timeStr);
-    localStorage.removeItem('dineflow_cart');
-
-    showToast(`🎉 Order placed! #${orderId}`);
-    setTimeout(() => window.location.href = 'tracking.html', 1200);
+  if (!name || !phone || !addr) {
+    showToast('⚠️ Please fill in all delivery details!'); return;
   }
+
+  if (!getToken()) {
+    showToast('⚠️ Please login first!'); return;
+  }
+
+  try {
+    const res  = await fetch(`${API_URL}/orders`, {
+      method: 'POST',
+      headers: authHeader(),
+      body: JSON.stringify({ area, full_address: addr })
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      localStorage.setItem('dineflow_order_id', data.order.order_code);
+      localStorage.removeItem('dineflow_cart');
+      showToast(`🎉 Order placed! #${data.order.order_code}`);
+      setTimeout(() => window.location.href = 'tracking.html', 1200);
+    } else {
+      showToast('⚠️ ' + data.message);
+    }
+  } catch (err) {
+    showToast('⚠️ Server connection failed!');
+  }
+}
 </script>
 </body>
 </html>

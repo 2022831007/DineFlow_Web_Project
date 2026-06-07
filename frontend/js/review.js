@@ -1,6 +1,6 @@
 let selectedRating = 0;
 
-function setRating(n) {
+ function setRating(n) {
   selectedRating = n;
   const labels = ['', 'Poor 😞', 'Fair 😐', 'Good 😊', 'Great 😄', 'Excellent 🤩'];
   document.getElementById('ratingLabel').textContent = labels[n];
@@ -11,13 +11,33 @@ function setRating(n) {
   });
 }
 
-function submitReview() {
+ async function submitReview() {
   const name = document.getElementById('rv-name').value.trim();
   const text = document.getElementById('rv-text').value.trim();
 
   if (!name || !text || !selectedRating) {
     showToast('⚠️ Please complete all fields and select a rating');
     return;
+  }
+  const token = getToken();
+  if (token) {
+    try {
+      const res = await fetch(`${API_URL}/reviews`, {
+        method: 'POST',
+        headers: authHeader(),
+        body: JSON.stringify({
+          rating: selectedRating,
+          review_text: text
+        })
+      });
+      const data = await res.json();
+      if (!data.success) {
+        showToast('⚠️ ' + data.message);
+        return;
+      }
+    } catch (err) {
+      console.log('Review sync failed:', err);
+    }
   }
 
   const avatars = ['👤', '👨', '👩', '👦', '👧', '🧑'];

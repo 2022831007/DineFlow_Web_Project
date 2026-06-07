@@ -130,6 +130,7 @@
   <p style="margin-top:6px;">A Web-Based Dine-In &amp; Online Order Management System</p>
   <p style="margin-top:4px;opacity:.5;">© 2026 DineFlow ·</p>
 </footer>
+<script src="js/api.js"></script>
 <script src="js/data.js"></script>
 <script src="js/ui.js"></script>
 <script src="js/cart.js"></script>
@@ -139,8 +140,50 @@
 <script>
   const appState = { cart: JSON.parse(localStorage.getItem("dineflow_cart") || "[]"), currentUser: null, reviews: [...INITIAL_REVIEWS], lastOrderId: null, deliveryInfo: null };
   function saveCart() { localStorage.setItem("dineflow_cart", JSON.stringify(appState.cart)); }
+  function updateCartUI() {
+  const total = appState.cart.reduce((s, i) => s + i.price * i.qty, 0);
+  const count = appState.cart.reduce((s, i) => s + i.qty, 0);
+  document.getElementById('cartCount').textContent = count;
+  const itemsEl  = document.getElementById('cartItems');
+  const footerEl = document.getElementById('cartFooter');
+  if (!appState.cart.length) {
+    itemsEl.innerHTML = `<div class="empty-cart"><div class="emoji">🛒</div><p>Your cart is empty!<br/>Add some delicious items</p></div>`;
+    footerEl.style.display = 'none'; return;
+  }
+  itemsEl.innerHTML = appState.cart.map(c => `
+    <div class="cart-item">
+      <div class="cart-item-emoji">${c.emoji}</div>
+      <div class="cart-item-info">
+        <div class="cart-item-name">${c.name}</div>
+        <div class="cart-item-price">৳${c.price} × ${c.qty} = ৳${c.price * c.qty}</div>
+      </div>
+      <div class="qty-control">
+        <button class="qty-btn" onclick="changeQty(${c.id}, -1)">−</button>
+        <span class="qty-num">${c.qty}</span>
+        <button class="qty-btn" onclick="changeQty(${c.id}, 1)">+</button>
+      </div>
+    </div>`).join('');
+  document.getElementById('cartTotal').textContent = `৳${total}`;
+  footerEl.style.display = 'block';
+}
+
+function toggleCart() {
+  document.getElementById('cartSidebar').classList.toggle('open');
+  document.getElementById('cartOverlay').classList.toggle('open');
+}
+
+function changeQty(id, delta) {
+  const idx = appState.cart.findIndex(c => c.id === id);
+  if (idx === -1) return;
+  appState.cart[idx].qty += delta;
+  if (appState.cart[idx].qty <= 0) appState.cart.splice(idx, 1);
+  saveCart();
+  updateCartUI();
+}
 
   document.addEventListener("DOMContentLoaded", () => {
+    initAuth(); 
+    updateCartUI();
     renderReviews();
     document.getElementById('loginModal').addEventListener('click', function(e){ if(e.target===this) closeModal('login'); });
     document.getElementById('signupModal').addEventListener('click', function(e){ if(e.target===this) closeModal('signup'); });

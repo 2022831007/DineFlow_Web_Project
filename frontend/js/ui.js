@@ -36,7 +36,7 @@ function renderGrid(items, containerId) {
         <div class="food-desc">${f.desc}</div>
         <div class="food-footer">
           <div class="food-price">৳${f.price}</div>
-          <button class="add-btn" onclick="addToCart(${f.id})">+</button>
+          <button class="add-btn" onclick="addToCart(${f.id},this)">+</button>
         </div>
       </div>
     </div>

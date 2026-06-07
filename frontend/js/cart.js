@@ -1,4 +1,4 @@
-function addToCart(id) {
+ async function addToCart(id,btnEl) {
   const item = MENU.find(m => m.id === id);
   const existing = appState.cart.find(c => c.id === id);
 
@@ -11,9 +11,25 @@ function addToCart(id) {
   updateCartUI();
   showToast(`✅ ${item.name} added to cart!`);
 
-  event.target.style.transform = 'scale(1.35)';
-  setTimeout(() => { event.target.style.transform = ''; }, 200);
+  if (btnEl) {
+    btnEl.style.transform = 'scale(1.35)';
+    setTimeout(() => { btnEl.style.transform = ''; }, 200);
+  }
+
+const token = getToken();
+  if (token) {
+    try {
+      await fetch(`${API_URL}/cart`, {
+        method: 'POST',
+        headers: authHeader(),
+        body: JSON.stringify({ food_item_id: id, quantity: 1 })
+      });
+    } catch (err) {
+      console.log('Cart sync failed:', err);
+    }
+  }
 }
+
 
 function changeQty(id, delta) {
   const idx = appState.cart.findIndex(c => c.id === id);

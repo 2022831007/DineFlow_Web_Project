@@ -41,7 +41,15 @@
     <h1>Hungry? 🍔<br/>We've Got You Covered!</h1>
     <p>Order your favourite meals — delivered fast, fresh &amp; delicious 😋</p>
     <div class="hero-search">
-      <input type="text" placeholder="Search for burgers, biryani, pizza…" oninput="filterMenu(this.value)" autocomplete="off"/>
+      <input type="text" placeholder="Search for burgers, biryani, pizza…" 
+       oninput="filterMenu(this.value)" 
+       autocomplete="off" 
+        autocorrect="off"
+       autocapitalize="off"
+       spellcheck="false"
+       name="search_q"
+       readonly 
+        onfocus="this.removeAttribute('readonly')"/>
       <button onclick="window.location.href='menu.html'">Search 🔍</button>
     </div>
   </div>
@@ -121,7 +129,7 @@
   <p style="margin-top:6px;">A Web-Based Dine-In &amp; Online Order Management System</p>
   <p style="margin-top:4px;opacity:.5;">© 2026 DineFlow ·</p>
 </footer>
-
+<script src="js/api.js"></script>
 <script src="js/data.js"></script>
 <script src="js/ui.js"></script>
 <script src="js/toast.js"></script>
@@ -141,7 +149,7 @@
   }
 
   // Cart functions
-  function addToCart(id) {
+   async function addToCart(id,btnEl) {
     const item = MENU.find(m => m.id === id);
     const existing = appState.cart.find(c => c.id === id);
     if (existing) { existing.qty++; }
@@ -149,8 +157,22 @@
     saveCart();
     updateCartUI();
     showToast(`✅ ${item.name} added to cart!`);
-    event.target.style.transform = 'scale(1.35)';
-    setTimeout(() => { event.target.style.transform = ''; }, 200);
+    if (btnEl) {
+    btnEl.style.transform = 'scale(1.35)';
+    setTimeout(() => { btnEl.style.transform = ''; }, 200);
+    }
+     const token = getToken();
+  if (token) {
+    try {
+      await fetch(`${API_URL}/cart`, {
+        method: 'POST',
+        headers: authHeader(),
+        body: JSON.stringify({ food_item_id: id, quantity: 1 })
+      });
+    } catch (err) {
+      console.log('Cart sync failed:', err);
+    }
+  }
   }
 
   function changeQty(id, delta) {
