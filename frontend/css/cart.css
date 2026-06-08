@@ -30,7 +30,7 @@
 }
 .cart-close:hover { background: rgba(255,255,255,.35); }
 
-.cart-items { flex: 1; overflow-y: auto; padding: 20px; }
+.cart-items {  padding: 20px; }
 
 .cart-item {
   display: flex; align-items: center; gap: 14px;

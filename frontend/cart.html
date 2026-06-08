@@ -115,19 +115,35 @@
       return;
     }
     const cart = JSON.parse(saved);
-    const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
-    const vat      = Math.round(subtotal * 0.05);
+const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
 
-    document.getElementById('orderSummary').innerHTML = cart.map(c => `
-      <div class="order-summary-item">
-        <span>${c.emoji} ${c.name} × ${c.qty}</span>
-        <span>৳${c.price * c.qty}</span>
-      </div>`).join('');
+const promoData = JSON.parse(localStorage.getItem('dineflow_promo') || 'null');
+let discount = 0;
+if (promoData) {
+  discount = promoData.type === 'percent'
+    ? Math.round(subtotal * promoData.value / 100)
+    : Math.min(promoData.value, subtotal);
+}
 
-    document.getElementById('summarySubtotal').textContent = `৳${subtotal}`;
-    document.getElementById('summaryVat').textContent      = `৳${vat}`;
-    document.getElementById('summaryGrand').textContent    = `৳${subtotal + vat}`;
-  });
+const afterDiscount = subtotal - discount;
+const vat   = Math.round(afterDiscount * 0.05);
+const grand = afterDiscount + vat;
+
+document.getElementById('orderSummary').innerHTML = cart.map(c => `
+  <div class="order-summary-item">
+    <span>${c.emoji} ${c.name} × ${c.qty}</span>
+    <span>৳${c.price * c.qty}</span>
+  </div>`).join('') + (discount > 0 ? `
+  <div class="order-summary-item" style="color:#27ae60; font-weight:800;">
+    <span>🎟️ Discount (${promoData.code})</span>
+    <span>−৳${discount}</span>
+  </div>` : '');
+
+document.getElementById('summarySubtotal').textContent = `৳${subtotal}`;
+document.getElementById('summaryVat').textContent      = `৳${vat}`;
+document.getElementById('summaryGrand').textContent    = `৳${grand}`;
+
+    });
 
   async function placeOrder() {
   const name  = document.getElementById('co-name').value.trim();
@@ -155,6 +171,7 @@
       localStorage.setItem('dineflow_order_id', data.order.order_code);
       localStorage.setItem('dineflow_order_time', new Date().toLocaleTimeString('en-BD', {hour:'2-digit', minute:'2-digit'}));
       localStorage.removeItem('dineflow_cart');
+      localStorage.removeItem('dineflow_promo');
       showToast(`🎉 Order placed! #${data.order.order_code}`);
       setTimeout(() => window.location.href = 'tracking.html', 1200);
     } else {
