@@ -2,7 +2,7 @@ const db = require('../config/db');
 
 exports.placeDineOrder = async (req, res) => {
   const { table_id, waiter_id, items } = req.body;
-  
+
   if (!table_id || !waiter_id || !items || !Array.isArray(items) || items.length === 0) {
     return res.status(400).json({ success: false, message: 'Missing required fields or items' });
   }
@@ -34,10 +34,10 @@ exports.placeDineOrder = async (req, res) => {
     // Update table status to occupied
     await db.query('UPDATE restaurant_tables SET status = "occupied" WHERE id = ?', [table_id]);
 
-    res.json({ 
-      success: true, 
-      message: 'Dine-in order placed successfully', 
-      order_id: orderId 
+    res.json({
+      success: true,
+      message: 'Dine-in order placed successfully',
+      order_id: orderId
     });
   } catch (err) {
     console.error(err);
@@ -56,7 +56,7 @@ exports.getAllDineOrders = async (req, res) => {
         AND o.status NOT IN ('served', 'cancelled')
       ORDER BY o.created_at DESC
     `);
-    
+
     res.json({ success: true, data: orders });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -83,12 +83,12 @@ exports.getDineOrderById = async (req, res) => {
       WHERE oi.order_id = ?
     `, [req.params.id]);
 
-    res.json({ 
-      success: true, 
-      data: { 
-        ...order[0], 
-        items 
-      } 
+    res.json({
+      success: true,
+      data: {
+        ...order[0],
+        items
+      }
     });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });

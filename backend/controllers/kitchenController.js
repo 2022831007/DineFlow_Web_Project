@@ -46,10 +46,10 @@ exports.updateOrderStatus = async (req, res) => {
     // If order is served, make table available again
     if (status === 'served') {
       const [order] = await db.query(
-        'SELECT table_id FROM orders WHERE id = ?', 
+        'SELECT table_id FROM orders WHERE id = ?',
         [req.params.id]
       );
-      
+
       if (order.length > 0) {
         await db.query(
           'UPDATE restaurant_tables SET status = "available" WHERE id = ?',
@@ -58,9 +58,9 @@ exports.updateOrderStatus = async (req, res) => {
       }
     }
 
-    res.json({ 
-      success: true, 
-      message: `Order status updated to ${status}` 
+    res.json({
+      success: true,
+      message: `Order status updated to ${status}`
     });
   } catch (err) {
     console.error(err);
@@ -120,8 +120,8 @@ exports.getSalesReport = async (req, res) => {
       LIMIT 5
     `, [from, to]);
 
-    res.json({ 
-      success: true, 
+    res.json({
+      success: true,
       data: report,
       categories,
       topFoods
