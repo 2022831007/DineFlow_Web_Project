@@ -23,6 +23,7 @@ app.use('/api/menu', require('./routes/menu'));
 app.use('/api/cart', require('./routes/cart'));
 app.use('/api/orders', require('./routes/orders'));
 app.use('/api/reviews', require('./routes/reviews'));
+app.use('/api/inventory', require('./routes/inventory'));
 
 // DineFlow Restaurant Routes
 app.use('/api/tables', require('./routes/tables'));

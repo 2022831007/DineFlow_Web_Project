@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard - DineFlow</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/admin.css">
+</head>
+<body class="admin-body">
+
+  <!-- Sidebar -->
+  <aside class="admin-sidebar" id="adminSidebar">
+    <div class="admin-brand" onclick="window.location.href='index.html'">
+      DineFlow Admin
+    </div>
+    <div class="admin-menu">
+      <a href="admin_dashboard.html" class="active"><span class="admin-menu-icon">📊</span> Dashboard</a>
+      <a href="admin_food.html"><span class="admin-menu-icon">🍔</span> Food Menu</a>
+      <a href="admin_inventory.html"><span class="admin-menu-icon">📦</span> Inventory</a>
+      <a href="admin_billing.html"><span class="admin-menu-icon">🧾</span> Billing</a>
+      <a href="admin_reviews.html"><span class="admin-menu-icon">⭐</span> Reviews</a>
+      <a href="admin_sales.html"><span class="admin-menu-icon">📈</span> Sales Report</a>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="admin-main">
+    
+    <!-- Top Navbar -->
+    <header class="admin-navbar">
+      <div class="admin-nav-left">
+        <button class="menu-toggle" onclick="toggleAdminMenu()">☰</button>
+        <div class="admin-nav-title">Dashboard Overview</div>
+      </div>
+      <div class="admin-nav-right">
+        <div class="admin-profile">
+          <span>Admin User</span>
+          <div class="admin-avatar">A</div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Content Area -->
+    <div class="admin-content page-anim">
+      
+      <!-- Stats Grid -->
+      <div class="stats-grid" id="dashboardStats">
+        <!-- Rendered via JS -->
+      </div>
+
+      <div class="charts-grid">
+        <!-- Recent Orders -->
+        <div class="admin-card">
+          <div class="admin-card-header">
+            <div class="admin-card-title">Recent Orders</div>
+            <button class="admin-btn secondary" onclick="window.location.href='admin_billing.html'">View All</button>
+          </div>
+          <div class="table-responsive">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Order ID</th>
+                  <th>Customer</th>
+                  <th>Total</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="recentOrdersTable">
+                <!-- Rendered via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Low Stock Alerts -->
+        <div class="admin-card">
+          <div class="admin-card-header">
+            <div class="admin-card-title">Low Stock Alerts ⚠️</div>
+            <button class="admin-btn secondary" onclick="window.location.href='admin_inventory.html'">Manage Stock</button>
+          </div>
+          <div class="table-responsive">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Item</th>
+                  <th>Qty Left</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="lowStockTable">
+                <!-- Rendered via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Reviews -->
+      <div class="admin-card">
+        <div class="admin-card-header">
+          <div class="admin-card-title">Recent Reviews</div>
+          <button class="admin-btn secondary" onclick="window.location.href='admin_reviews.html'">Manage Reviews</button>
+        </div>
+        <div class="table-responsive">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Customer</th>
+                <th>Rating</th>
+                <th>Review</th>
+              </tr>
+            </thead>
+            <tbody id="recentReviewsTable">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <script src="js/data.js"></script>
+  <script src="js/admin.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      renderDashboard();
+    });
+
+    function renderDashboard() {
+      // 1. Render Stats
+      const totalFoods = MENU.length;
+      const totalReviews = INITIAL_REVIEWS.length;
+      const totalRevenue = BILLS.filter(b => b.status === 'Paid').reduce((sum, b) => sum + b.amount, 0);
+      const lowStockCount = INVENTORY.filter(i => i.status === 'Low Stock').length;
+
+      document.getElementById('dashboardStats').innerHTML = `
+        <div class="stat-card">
+          <div class="stat-icon orange">🍔</div>
+          <div class="stat-info">
+            <h3>Total Foods</h3>
+            <div class="stat-value">${totalFoods}</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon pink">🧾</div>
+          <div class="stat-info">
+            <h3>Total Orders</h3>
+            <div class="stat-value">${BILLS.length}</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon green">💰</div>
+          <div class="stat-info">
+            <h3>Revenue</h3>
+            <div class="stat-value">৳${totalRevenue}</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon yellow">⭐</div>
+          <div class="stat-info">
+            <h3>Reviews</h3>
+            <div class="stat-value">${totalReviews}</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon purple">⚠️</div>
+          <div class="stat-info">
+            <h3>Low Stock Items</h3>
+            <div class="stat-value">${lowStockCount}</div>
+          </div>
+        </div>
+      `;
+
+      // 2. Render Recent Orders
+      const ordersHtml = RECENT_ORDERS.map(o => {
+        let badge = 'info';
+        if (o.status === 'Delivered') badge = 'success';
+        if (o.status === 'Pending') badge = 'warning';
+        return `
+          <tr>
+            <td>${o.id}</td>
+            <td>${o.customer}</td>
+            <td>৳${o.total}</td>
+            <td><span class="status-badge ${badge}">${o.status}</span></td>
+          </tr>
+        `;
+      }).join('');
+      document.getElementById('recentOrdersTable').innerHTML = ordersHtml;
+
+      // 3. Render Low Stock
+      const lowStockHtml = INVENTORY.filter(i => i.status === 'Low Stock').map(i => `
+        <tr>
+          <td>${i.name}</td>
+          <td style="color: var(--pink); font-weight: 800;">${i.qty} ${i.unit}</td>
+          <td><button class="admin-btn secondary" style="padding: 6px 12px; font-size: 0.8rem;" onclick="window.location.href='admin_inventory.html'">Restock</button></td>
+        </tr>
+      `).join('');
+      document.getElementById('lowStockTable').innerHTML = lowStockHtml || `<tr><td colspan="3">No low stock items!</td></tr>`;
+
+      // 4. Render Recent Reviews
+      const reviewsHtml = INITIAL_REVIEWS.slice(0, 3).map(r => `
+        <tr>
+          <td><strong>${r.name}</strong><br><small style="color: var(--muted);">${r.date}</small></td>
+          <td style="color: var(--yellow);">${'⭐'.repeat(r.rating)}</td>
+          <td>${r.text}</td>
+        </tr>
+      `).join('');
+      document.getElementById('recentReviewsTable').innerHTML = reviewsHtml;
+    }
+  </script>
+</body>
+</html>
