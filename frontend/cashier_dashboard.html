@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cashier POS Dashboard - DineFlow</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/admin.css">
+  <style>
+    /* Specific adjustments for POS Layout */
+    .pos-layout {
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: 24px;
+      height: calc(100vh - var(--admin-nav-h) - 64px);
+      min-height: 600px;
+    }
+    .pos-left {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      overflow-y: auto;
+      padding-right: 8px;
+    }
+    .pos-right {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      overflow-y: auto;
+    }
+    /* Hide scrollbars for cleaner POS look */
+    .pos-left::-webkit-scrollbar, .pos-right::-webkit-scrollbar { width: 4px; }
+    .pos-left::-webkit-scrollbar-thumb, .pos-right::-webkit-scrollbar-thumb { background: #ddd; border-radius: 4px; }
+    
+    .billing-panel {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+      padding: 24px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .payment-summary {
+      background: #fafafa;
+      padding: 16px;
+      border-radius: 12px;
+      margin-top: 20px;
+    }
+    
+    .payment-summary .row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      font-size: 0.95rem;
+    }
+    .payment-summary .row.total {
+      font-size: 1.2rem;
+      font-weight: 900;
+      color: var(--pink);
+      border-top: 1px solid #ddd;
+      padding-top: 8px;
+      margin-top: 8px;
+    }
+
+    .payment-calculator {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+      padding: 24px;
+    }
+    
+    .mini-widget-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+    .mini-widget {
+      background: #f9f9f9;
+      padding: 16px;
+      border-radius: 12px;
+      text-align: center;
+    }
+    .mini-widget h4 { font-size: 0.8rem; color: var(--muted); margin-bottom: 4px; }
+    .mini-widget div { font-size: 1.1rem; font-weight: 800; color: var(--dark); }
+
+    @media (max-width: 1200px) {
+      .pos-layout {
+        grid-template-columns: 1fr;
+        height: auto;
+      }
+      .pos-left, .pos-right { overflow-y: visible; }
+    }
+    
+    @media print {
+      body * { visibility: hidden; }
+      #receiptModal, #receiptModal * { visibility: visible; }
+      #receiptModal { position: absolute; left: 0; top: 0; width: 100%; max-width: 400px; box-shadow: none; transform: none !important; margin: 0 auto; padding: 20px;}
+      .no-print { display: none !important; }
+      .admin-sidebar, .admin-navbar { display: none; }
+    }
+  </style>
+</head>
+<body class="admin-body">
+
+  <!-- Sidebar -->
+  <aside class="admin-sidebar" id="adminSidebar">
+    <div class="admin-brand" onclick="window.location.href='index.html'">
+      DineFlow Cashier
+    </div>
+    <div class="admin-menu">
+      <a href="cashier_dashboard.html" class="active"><span class="admin-menu-icon">💻</span> POS Dashboard</a>
+      <a href="index.html" target="_blank"><span class="admin-menu-icon">🍽️</span> View Menu</a>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="admin-main">
+    
+    <!-- Top Navbar -->
+    <header class="admin-navbar">
+      <div class="admin-nav-left">
+        <button class="menu-toggle" onclick="toggleAdminMenu()">☰</button>
+        <div class="admin-nav-title">Point of Sale</div>
+      </div>
+      <div class="admin-nav-right">
+        <button class="admin-btn secondary" onclick="document.getElementById('orderSearch').focus();">🔍 Search Orders</button>
+        <div class="admin-profile">
+          <span>Cashier 01</span>
+          <div class="admin-avatar" style="background: var(--purple);">C</div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Content Area -->
+    <div class="admin-content page-anim">
+      
+      <!-- Top Stats Grid -->
+      <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); margin-bottom: 20px;">
+        <div class="stat-card" style="padding: 16px;">
+          <div class="stat-icon pink" style="width: 45px; height: 45px; font-size: 1.3rem;">🧾</div>
+          <div class="stat-info">
+            <h3 style="font-size: 0.8rem;">Today's Orders</h3>
+            <div class="stat-value" id="stat-today-orders" style="font-size: 1.4rem;">0</div>
+          </div>
+        </div>
+        <div class="stat-card" style="padding: 16px;">
+          <div class="stat-icon warning" style="width: 45px; height: 45px; font-size: 1.3rem;">⏳</div>
+          <div class="stat-info">
+            <h3 style="font-size: 0.8rem;">Pending</h3>
+            <div class="stat-value" id="stat-pending" style="font-size: 1.4rem;">0</div>
+          </div>
+        </div>
+        <div class="stat-card" style="padding: 16px;">
+          <div class="stat-icon success" style="width: 45px; height: 45px; font-size: 1.3rem;">✅</div>
+          <div class="stat-info">
+            <h3 style="font-size: 0.8rem;">Completed</h3>
+            <div class="stat-value" id="stat-completed" style="font-size: 1.4rem;">0</div>
+          </div>
+        </div>
+        <div class="stat-card" style="padding: 16px;">
+          <div class="stat-icon green" style="width: 45px; height: 45px; font-size: 1.3rem;">💰</div>
+          <div class="stat-info">
+            <h3 style="font-size: 0.8rem;">Revenue</h3>
+            <div class="stat-value" id="stat-revenue" style="font-size: 1.4rem;">৳0</div>
+          </div>
+        </div>
+        <div class="stat-card" style="padding: 16px;">
+          <div class="stat-icon purple" style="width: 45px; height: 45px; font-size: 1.3rem;">📄</div>
+          <div class="stat-info">
+            <h3 style="font-size: 0.8rem;">Total Bills</h3>
+            <div class="stat-value" id="stat-bills" style="font-size: 1.4rem;">0</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Split Layout for POS -->
+      <div class="pos-layout">
+        
+        <!-- Left Column: Orders & Summary -->
+        <div class="pos-left">
+          
+          <!-- Recent Orders Table -->
+          <div class="admin-card" style="flex: 1; display: flex; flex-direction: column; margin-bottom: 0;">
+            <div class="admin-card-header">
+              <div class="admin-card-title">Live Orders Management</div>
+              <div class="admin-actions">
+                <input type="text" id="orderSearch" class="admin-search" placeholder="Order ID..." onkeyup="renderOrdersTable()" style="width: 120px; padding: 8px;">
+                <input type="text" id="customerSearch" class="admin-search" placeholder="Customer..." onkeyup="renderOrdersTable()" style="width: 120px; padding: 8px;">
+                <select id="statusFilter" class="admin-search" onchange="renderOrdersTable()" style="width: 110px; padding: 8px;">
+                  <option value="all">Status</option>
+                  <option value="Pending">Pending</option>
+                  <option value="Preparing">Preparing</option>
+                  <option value="Ready">Ready</option>
+                  <option value="Completed">Completed</option>
+                </select>
+                <select id="payFilter" class="admin-search" onchange="renderOrdersTable()" style="width: 110px; padding: 8px;">
+                  <option value="all">Payment</option>
+                  <option value="Paid">Paid</option>
+                  <option value="Unpaid">Unpaid</option>
+                </select>
+              </div>
+            </div>
+            
+            <div class="table-responsive" style="flex: 1; overflow-y: auto;">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Customer</th>
+                    <th>Items</th>
+                    <th>Total</th>
+                    <th>Status</th>
+                    <th>Payment</th>
+                    <th>Time</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="cashierOrdersTable">
+                  <!-- Rendered via cashier.js -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Sales Summary Mini Widget -->
+          <div class="admin-card" style="margin-bottom: 0;">
+            <div class="admin-card-title" style="margin-bottom: 16px;">Sales Overview (Today)</div>
+            <div class="mini-widget-grid">
+              <div class="mini-widget" style="background: #E8FFF7; border: 1px solid #b2f2d9;">
+                <h4>Total Sales</h4>
+                <div id="widget-total-sales" style="color: var(--green);">৳0</div>
+              </div>
+              <div class="mini-widget">
+                <h4>Cash</h4>
+                <div id="widget-cash">৳0</div>
+              </div>
+              <div class="mini-widget">
+                <h4>Card</h4>
+                <div id="widget-card">৳0</div>
+              </div>
+              <div class="mini-widget">
+                <h4>Mobile Banking</h4>
+                <div id="widget-mobile">৳0</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Right Column: Billing & Payment Panel -->
+        <div class="pos-right">
+          
+          <!-- Billing Panel -->
+          <div class="billing-panel">
+            <div class="admin-card-title" style="margin-bottom: 16px; border-bottom: 1px solid #eee; padding-bottom: 10px;">
+              Active Bill / Cart
+              <button class="icon-btn info" style="float: right; font-size: 0.8rem; width:auto; padding: 0 10px;" onclick="clearBillingForm()">Clear</button>
+            </div>
+            
+            <!-- Customer Info -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px;">
+              <input type="text" id="b-customer-name" class="admin-search" placeholder="Customer Name" style="width: 100%;">
+              <input type="text" id="b-phone" class="admin-search" placeholder="Phone Number" style="width: 100%;">
+              <input type="text" id="b-table" class="admin-search" placeholder="Table No" style="grid-column: span 2; width: 100%;">
+            </div>
+
+            <!-- Order Items -->
+            <div style="flex: 1; overflow-y: auto; border: 1px solid #eee; border-radius: 8px; margin-bottom: 16px; min-height: 150px;">
+              <table class="admin-table" style="min-width: 100%;">
+                <thead style="position: sticky; top: 0; background: #fff;">
+                  <tr>
+                    <th style="padding: 8px;">Item</th>
+                    <th style="padding: 8px;">Qty</th>
+                    <th style="padding: 8px;">Price</th>
+                    <th style="padding: 8px;">Sub</th>
+                  </tr>
+                </thead>
+                <tbody id="billItemsTable">
+                  <!-- Rendered via JS -->
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Add Item Mock Button -->
+            <button class="admin-btn secondary" style="width: 100%; justify-content: center; margin-bottom: 16px;" onclick="addMockItemToBill()">+ Add Item (Mock)</button>
+
+            <!-- Discount -->
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+              <label style="font-weight: bold; font-size: 0.9rem;">Discount (৳):</label>
+              <input type="number" id="b-discount" class="admin-search" style="flex: 1;" placeholder="0" oninput="updateBillingUI()">
+            </div>
+
+            <!-- Totals -->
+            <div class="payment-summary">
+              <div class="row"><span>Subtotal:</span> <span>৳<span id="bill-subtotal">0</span></span></div>
+              <div class="row"><span>VAT (5%):</span> <span>৳<span id="bill-vat">0</span></span></div>
+              <div class="row total"><span>Grand Total:</span> <span>৳<span id="bill-total">0</span></span></div>
+            </div>
+          </div>
+
+          <!-- Payment Calculator -->
+          <div class="payment-calculator">
+            <div class="admin-card-title" style="margin-bottom: 16px;">Payment Process</div>
+            <input type="hidden" id="payment-order-id">
+            
+            <div class="admin-form-group">
+              <label>Payment Method</label>
+              <select id="pay-method" style="background: #f9f9f9;">
+                <option value="Cash">Cash</option>
+                <option value="Card">Card / POS</option>
+                <option value="Mobile">Mobile Banking (bKash/Nagad/Rocket)</option>
+              </select>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+              <div class="admin-form-group" style="margin-bottom: 0;">
+                <label>Total Bill (৳)</label>
+                <input type="number" id="pay-total-bill" readonly style="background: #eee; font-weight: bold; color: var(--pink);">
+              </div>
+              <div class="admin-form-group" style="margin-bottom: 0;">
+                <label>Received (৳)</label>
+                <input type="number" id="pay-received" placeholder="0" oninput="calculateChange()" style="font-weight: bold; color: var(--green);">
+              </div>
+            </div>
+
+            <div class="admin-form-group">
+              <label>Change Amount (৳)</label>
+              <input type="number" id="pay-change" readonly style="background: #f9f9f9; font-weight: bold; font-size: 1.2rem;">
+            </div>
+
+            <div id="payment-status-ind" style="margin-bottom: 16px; text-align: center;">
+              <span class="status-badge warning">Waiting for payment</span>
+            </div>
+
+            <button class="admin-btn" style="width: 100%; justify-content: center; font-size: 1.1rem; padding: 14px;" onclick="processPayment()">Complete Payment & Print</button>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Printable Receipt Modal -->
+  <div class="admin-modal-overlay no-print" id="receiptModal">
+    <div class="admin-modal" style="width: 400px;">
+      <div class="admin-modal-header no-print">
+        <h2 style="font-size: 1.2rem;">Receipt Preview</h2>
+        <button class="admin-modal-close" onclick="closeAdminModal('receiptModal')">✕</button>
+      </div>
+      
+      <!-- Receipt Content will be injected here -->
+      <div id="receiptContent" style="background: #fff; padding: 10px;">
+        
+      </div>
+      
+      <div class="admin-modal-footer no-print">
+        <button class="admin-btn secondary" onclick="closeAdminModal('receiptModal')">Close</button>
+        <button class="admin-btn" onclick="printReceipt()">🖨️ Print Receipt</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/admin.js"></script>
+  <script src="js/cashier.js"></script>
+</body>
+</html>

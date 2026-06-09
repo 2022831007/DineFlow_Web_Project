@@ -42,4 +42,44 @@ const submitReview = async (req, res) => {
   }
 };
 
-module.exports = { getReviews, submitReview };
+const getAllReviews = async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      `SELECT r.id, r.rating, r.review_text AS text, r.created_at AS date, r.status,
+              COALESCE(CONCAT(c.first_name, ' ', c.last_name), 'Anonymous Customer') AS name
+       FROM reviews r
+       LEFT JOIN customers c ON c.id = r.customer_id
+       ORDER BY r.created_at DESC`
+    );
+    res.json({ success: true, reviews: rows });
+  } catch (err) {
+    console.error('Get all reviews error:', err);
+    res.status(500).json({ success: false, message: 'Server error.' });
+  }
+};
+
+const updateReviewStatus = async (req, res) => {
+  const { status } = req.body;
+  if (!['Pending', 'Approved', 'Rejected'].includes(status)) {
+    return res.status(400).json({ success: false, message: 'Invalid status.' });
+  }
+  try {
+    await db.query('UPDATE reviews SET status = ? WHERE id = ?', [status, req.params.id]);
+    res.json({ success: true, message: `Review status updated to ${status}.` });
+  } catch (err) {
+    console.error('Update review status error:', err);
+    res.status(500).json({ success: false, message: 'Server error.' });
+  }
+};
+
+const deleteReview = async (req, res) => {
+  try {
+    await db.query('DELETE FROM reviews WHERE id = ?', [req.params.id]);
+    res.json({ success: true, message: 'Review deleted successfully.' });
+  } catch (err) {
+    console.error('Delete review error:', err);
+    res.status(500).json({ success: false, message: 'Server error.' });
+  }
+};
+
+module.exports = { getReviews, submitReview, getAllReviews, updateReviewStatus, deleteReview };

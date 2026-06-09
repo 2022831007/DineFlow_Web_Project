@@ -1,0 +1,91 @@
+import React, { useState } from "react";
+import WaiterDashboard from "./pages/WaiterDashboard";
+import TableSelection from "./pages/TableSelection";
+import DineInOrder from "./pages/DineInOrder";
+import KitchenDashboard from "./pages/KitchenDashboard";
+import AdminPanel from "./pages/admin/AdminPanel";
+
+function App() {
+  const [activePortal, setActivePortal] = useState("admin"); // Default to admin for easier testing of your task
+
+  // Return full screen layout for Admin Panel to avoid extra layout padding/border
+  if (activePortal === "admin") {
+    return (
+      <div style={{ display: "flex", flexDirection: "column", height: "100vh", width: "100vw", overflow: "hidden" }}>
+        {/* Navigation Switcher header for development */}
+        <div className="no-print" style={{
+          background: "#1A0A2E",
+          color: "#fff",
+          padding: "10px 24px",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
+          flexShrink: 0
+        }}>
+          <span style={{ fontWeight: 800, fontSize: "1.1rem" }}>🍽 DineFlow Portals</span>
+          <div style={{ display: "flex", gap: "10px" }}>
+            <button onClick={() => setActivePortal("customer")} style={{ background: "#3b2f6b", color: "#fff", border: "none", padding: "6px 12px", borderRadius: "4px", cursor: "pointer" }}>Dine-In</button>
+            <button onClick={() => setActivePortal("waiter")} style={{ background: "#3b2f6b", color: "#fff", border: "none", padding: "6px 12px", borderRadius: "4px", cursor: "pointer" }}>Waiter</button>
+            <button onClick={() => setActivePortal("kitchen")} style={{ background: "#3b2f6b", color: "#fff", border: "none", padding: "6px 12px", borderRadius: "4px", cursor: "pointer" }}>Kitchen</button>
+            <button onClick={() => setActivePortal("admin")} style={{ background: "#FF2D78", color: "#fff", border: "none", padding: "6px 12px", borderRadius: "4px", cursor: "pointer", fontWeight: "bold" }}>Admin Panel</button>
+          </div>
+        </div>
+        <div style={{ flex: 1, overflow: "hidden" }}>
+          <AdminPanel />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh", width: "100vw", background: "#fafafa" }}>
+      {/* Navigation Switcher header */}
+      <div style={{
+        background: "#1A0A2E",
+        color: "#fff",
+        padding: "10px 24px",
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
+        flexShrink: 0
+      }}>
+        <span style={{ fontWeight: 800, fontSize: "1.1rem" }}>🍽 DineFlow Portals</span>
+        <div style={{ display: "flex", gap: "10px" }}>
+          <button onClick={() => setActivePortal("customer")} style={{ background: activePortal === "customer" ? "#FF2D78" : "#3b2f6b", color: "#fff", border: "none", padding: "6px 12px", borderRadius: "4px", cursor: "pointer", fontWeight: activePortal === "customer" ? "bold" : "normal" }}>Dine-In</button>
+          <button onClick={() => setActivePortal("waiter")} style={{ background: activePortal === "waiter" ? "#FF2D78" : "#3b2f6b", color: "#fff", border: "none", padding: "6px 12px", borderRadius: "4px", cursor: "pointer", fontWeight: activePortal === "waiter" ? "bold" : "normal" }}>Waiter</button>
+          <button onClick={() => setActivePortal("kitchen")} style={{ background: activePortal === "kitchen" ? "#FF2D78" : "#3b2f6b", color: "#fff", border: "none", padding: "6px 12px", borderRadius: "4px", cursor: "pointer", fontWeight: activePortal === "kitchen" ? "bold" : "normal" }}>Kitchen</button>
+          <button onClick={() => setActivePortal("admin")} style={{ background: "#3b2f6b", color: "#fff", border: "none", padding: "6px 12px", borderRadius: "4px", cursor: "pointer" }}>Admin Panel</button>
+        </div>
+      </div>
+
+      <div style={{ padding: "40px 20px", flex: 1, maxWidth: "1200px", margin: "0 auto", width: "100%" }}>
+        {activePortal === "customer" && (
+          <div>
+            <h1 style={{ textAlign: "center", marginBottom: "40px" }}>Customer Dine-In Ordering</h1>
+            <TableSelection />
+            <hr style={{ margin: "40px 0", borderColor: "#e5e4e7" }} />
+            <DineInOrder />
+          </div>
+        )}
+
+        {activePortal === "waiter" && (
+          <div>
+            <h1 style={{ textAlign: "center", marginBottom: "40px" }}>Waiter Dashboard</h1>
+            <WaiterDashboard />
+          </div>
+        )}
+
+        {activePortal === "kitchen" && (
+          <div>
+            <h1 style={{ textAlign: "center", marginBottom: "40px" }}>Kitchen Dashboard</h1>
+            <KitchenDashboard />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export default App;
